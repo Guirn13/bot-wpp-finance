@@ -1,7 +1,5 @@
 const { FUSO_HORARIO_PADRAO } = require('../domain/value-objects/Periodo')
 
-const VARIAVEIS_OBRIGATORIAS = ['SUPABASE_URL', 'SUPABASE_KEY']
-
 class ConfiguracaoInvalidaError extends Error {
   constructor(message) {
     super(message)
@@ -28,15 +26,26 @@ function validarFusoHorario(fusoHorario) {
   }
 }
 
+function obterChaveSecretaDoSupabase(variaveisDeAmbiente) {
+  return (
+    variaveisDeAmbiente.SUPABASE_SECRET_KEY?.trim() ||
+    variaveisDeAmbiente.SUPABASE_KEY?.trim() ||
+    ''
+  )
+}
+
 function carregarEnv(variaveisDeAmbiente) {
   if (!variaveisDeAmbiente) {
     require('dotenv').config({ quiet: true })
     variaveisDeAmbiente = process.env
   }
 
-  const variaveisAusentes = VARIAVEIS_OBRIGATORIAS.filter(
-    (nomeDaVariavel) => !variaveisDeAmbiente[nomeDaVariavel]?.trim()
-  )
+  const supabaseUrl = variaveisDeAmbiente.SUPABASE_URL?.trim() || ''
+  const supabaseKey = obterChaveSecretaDoSupabase(variaveisDeAmbiente)
+
+  const variaveisAusentes = []
+  if (!supabaseUrl) variaveisAusentes.push('SUPABASE_URL')
+  if (!supabaseKey) variaveisAusentes.push('SUPABASE_SECRET_KEY')
 
   if (variaveisAusentes.length > 0) {
     throw new ConfiguracaoInvalidaError(
@@ -46,8 +55,8 @@ function carregarEnv(variaveisDeAmbiente) {
   }
 
   const configuracao = {
-    SUPABASE_URL: variaveisDeAmbiente.SUPABASE_URL.trim(),
-    SUPABASE_KEY: variaveisDeAmbiente.SUPABASE_KEY.trim(),
+    SUPABASE_URL: supabaseUrl,
+    SUPABASE_KEY: supabaseKey,
     TIMEZONE: variaveisDeAmbiente.TIMEZONE?.trim() || FUSO_HORARIO_PADRAO,
   }
 
@@ -58,4 +67,3 @@ function carregarEnv(variaveisDeAmbiente) {
 }
 
 module.exports = { carregarEnv, ConfiguracaoInvalidaError }
-
