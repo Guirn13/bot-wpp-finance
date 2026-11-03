@@ -4,13 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch ."
+    "start": "node --watch .",
+    "test": "node --test \"tests/**/*.test.js\"",
+    "migrate:db-json": "node scripts/migrate-db-json.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "lowdb": "^1.0.0",
+    "@supabase/supabase-js": "^2.118.0",
+    "dotenv": "^18.0.9",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "^1.27.0"
   }
