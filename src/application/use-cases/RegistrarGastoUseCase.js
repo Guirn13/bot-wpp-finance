@@ -1,5 +1,6 @@
 const { IRegistrarGastoUseCase } = require('../ports/in/IRegistrarGastoUseCase')
 const { Gasto } = require('../../domain/entities/Gasto')
+const { classificarCategoria } = require('../../domain/services/ClassificadorDeCategoria')
 
 class RegistrarGastoUseCase extends IRegistrarGastoUseCase {
   constructor(
@@ -16,10 +17,11 @@ class RegistrarGastoUseCase extends IRegistrarGastoUseCase {
 
   async execute({ whatsappId, nome, categoria, valor }) {
     const usuario = await this.resolverUsuario(whatsappId, nome)
+    const categoriaClassificada = classificarCategoria(categoria)
 
     const novoGasto = Gasto.criar({
       usuarioId: usuario.id,
-      categoria,
+      categoria: categoriaClassificada,
       valor,
       data: this.relogio(),
     })
@@ -51,4 +53,3 @@ class RegistrarGastoUseCase extends IRegistrarGastoUseCase {
 }
 
 module.exports = { RegistrarGastoUseCase }
-

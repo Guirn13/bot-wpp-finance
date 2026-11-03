@@ -49,7 +49,10 @@ class WhatsappMessagePresenter {
   }
 
   formatoInvalido() {
-    return '⚠️ Formato inválido. Use: gasto: categoria valor\nEx: gasto: mercado 120.50'
+    return (
+      '⚠️ Formato inválido. Informe o valor e onde gastou.\n' +
+      'Ex: `gastei 200 em casa`, `paguei 50 no mercado` ou `uber 35`'
+    )
   }
 
   erroDeValidacao(mensagem) {
@@ -66,8 +69,13 @@ class WhatsappMessagePresenter {
 
   ajuda() {
     return (
-      `💡 *Comandos disponíveis:*\n\n` +
-      `🔹 *gasto: categoria valor* - Registra um gasto.\n Exemplo: \`gasto: alimentação 50\`\n` +
+      `💡 *Como usar o bot:*\n\n` +
+      `🔹 *Registrar gasto:* envie mensagens naturais ou o comando tradicional.\n` +
+      ` Exemplos:\n` +
+      ` • \`gastei 200 em casa\`\n` +
+      ` • \`paguei 120,50 no mercado\`\n` +
+      ` • \`uber 35\`\n` +
+      ` • \`gasto: alimentação 50\`\n\n` +
       `🔹 *!dia* - Mostra o resumo dos gastos do dia 📅\n` +
       `🔹 *!semana* - Mostra o resumo dos gastos da semana 📅\n` +
       `🔹 *!mes* - Mostra o resumo dos gastos do mês 📅\n` +
@@ -78,4 +86,3 @@ class WhatsappMessagePresenter {
 }
 
 module.exports = { WhatsappMessagePresenter }
-

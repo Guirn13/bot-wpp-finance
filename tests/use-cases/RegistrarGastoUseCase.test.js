@@ -23,12 +23,12 @@ describe('RegistrarGastoUseCase', () => {
     )
   })
 
-  it('cria o usuário e persiste o gasto', async () => {
+  it('cria o usuário, classifica a categoria e persiste o gasto', async () => {
     const gastoRegistrado = await registrarGastoUseCase.execute({
       whatsappId: '5511@c.us',
       nome: 'Ana',
-      categoria: 'Mercado',
-      valor: 120.5,
+      categoria: 'casa',
+      valor: 200,
     })
 
     assert.ok(gastoRegistrado.id)
@@ -36,8 +36,8 @@ describe('RegistrarGastoUseCase', () => {
       { ...gastoRegistrado, id: undefined },
       {
         id: undefined,
-        categoria: 'mercado',
-        valor: 120.5,
+        categoria: 'moradia',
+        valor: 200,
         data: INSTANTE_FIXO,
       }
     )
@@ -46,6 +46,17 @@ describe('RegistrarGastoUseCase', () => {
     assert.equal(usuario.nome, 'Ana')
     assert.equal(gastoRepository.gastos.length, 1)
     assert.equal(gastoRepository.gastos[0].usuarioId, usuario.id)
+  })
+
+  it('mantém a categoria original quando não há correspondência', async () => {
+    const gastoRegistrado = await registrarGastoUseCase.execute({
+      whatsappId: '5511@c.us',
+      nome: 'Ana',
+      categoria: 'Presente',
+      valor: 80,
+    })
+
+    assert.equal(gastoRegistrado.categoria, 'presente')
   })
 
   it('reaproveita o usuário existente e cacheia a resolução', async () => {
@@ -120,4 +131,3 @@ describe('RegistrarGastoUseCase', () => {
     assert.equal(gastoRepository.gastos.length, 0)
   })
 })
-

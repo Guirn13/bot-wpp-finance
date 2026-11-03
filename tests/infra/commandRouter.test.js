@@ -21,6 +21,7 @@ describe('interpretarValor', () => {
     r$50: 50,
     'R$ 12,30': 12.3,
     '1.234,56': 1234.56,
+    '200 reais': 200,
     abc: null,
     50.123: null,
     '-5': null,
@@ -64,15 +65,49 @@ describe('CommandRouter', () => {
     })
   })
 
+  it('interpreta mensagens naturais e classifica na categoria correspondente', async () => {
+    assert.equal(
+      await enviarMensagem('gastei 200 em casa'),
+      '✅ Gasto registrado: *moradia* - R$200.00'
+    )
+    assert.equal(
+      await enviarMensagem('paguei 50,50 no mercado'),
+      '✅ Gasto registrado: *alimentação* - R$50.50'
+    )
+    assert.equal(
+      await enviarMensagem('comprei um remédio por R$ 42,90'),
+      '✅ Gasto registrado: *saúde* - R$42.90'
+    )
+    assert.equal(
+      await enviarMensagem('uber 35'),
+      '✅ Gasto registrado: *transporte* - R$35.00'
+    )
+    assert.equal(
+      await enviarMensagem('gastei 35 reais no 99'),
+      '✅ Gasto registrado: *transporte* - R$35.00'
+    )
+    assert.equal(
+      await enviarMensagem('150 de conta de luz'),
+      '✅ Gasto registrado: *moradia* - R$150.00'
+    )
+  })
+
+  it('mantém a descrição original quando não reconhece uma categoria padrão', async () => {
+    assert.equal(
+      await enviarMensagem('gastei 80 com presente'),
+      '✅ Gasto registrado: *presente* - R$80.00'
+    )
+  })
+
   it('registra gasto com vírgula decimal e categoria composta', async () => {
     const resposta = await enviarMensagem('Gasto: Comida Fora 50,00')
-    assert.equal(resposta, '✅ Gasto registrado: *comida fora* - R$50.00')
+    assert.equal(resposta, '✅ Gasto registrado: *alimentação* - R$50.00')
   })
 
   it('mantém compatibilidade com o formato legado', async () => {
     assert.equal(
       await enviarMensagem('gasto: mercado 120.50'),
-      '✅ Gasto registrado: *mercado* - R$120.50'
+      '✅ Gasto registrado: *alimentação* - R$120.50'
     )
   })
 
@@ -81,6 +116,9 @@ describe('CommandRouter', () => {
     'gasto: mercado',
     'gasto: mercado abc',
     'gasto: 50',
+    'gastei',
+    'gastei 50',
+    'paguei em casa',
   ]) {
     it(`responde formato inválido para "${comandoInvalido}"`, async () => {
       assert.equal(
@@ -91,22 +129,22 @@ describe('CommandRouter', () => {
   }
 
   it('traduz erros de domínio em mensagens amigáveis', async () => {
-    const resposta = await enviarMensagem('gasto: mercado 0')
+    const resposta = await enviarMensagem('gastei 0 em casa')
     assert.match(resposta, /^⚠️ O valor do gasto deve ser/)
   })
 
-  it('monta os resumos de !dia, !semana e !mes', async () => {
-    await enviarMensagem('gasto: mercado 10')
-    await enviarMensagem('gasto: mercado 5,5')
-    await enviarMensagem('gasto: lazer 20')
+  it('monta os resumos de !dia, !semana e !mes com categorias classificadas', async () => {
+    await enviarMensagem('gastei 10 no mercado')
+    await enviarMensagem('paguei 5,5 na padaria')
+    await enviarMensagem('cinema 20')
 
     assert.equal(
       await enviarMensagem('!dia'),
-      '📅 *Resumo dos gastos de hoje*\n\n- mercado: R$10.00\n- mercado: R$5.50\n- lazer: R$20.00\n\n💰 *Total:* R$35.50'
+      '📅 *Resumo dos gastos de hoje*\n\n- alimentação: R$10.00\n- alimentação: R$5.50\n- lazer: R$20.00\n\n💰 *Total:* R$35.50'
     )
     assert.equal(
       await enviarMensagem(' !SEMANA '),
-      '📅 *Resumo dos gastos nesta semana*\n\n- mercado: R$15.50\n- lazer: R$20.00\n\n💰 *Total:* R$35.50'
+      '📅 *Resumo dos gastos nesta semana*\n\n- alimentação: R$15.50\n- lazer: R$20.00\n\n💰 *Total:* R$35.50'
     )
     assert.match(
       await enviarMensagem('!mes'),
@@ -120,7 +158,7 @@ describe('CommandRouter', () => {
       '📭 Nenhum gasto registrado ainda.'
     )
 
-    await enviarMensagem('gasto: mercado 10')
+    await enviarMensagem('gastei 10 no mercado')
     commandRouter.obterResumoUseCase.relogio = () =>
       new Date('2026-05-01T15:00:00Z')
     assert.equal(await enviarMensagem('!mes'), '📭 Nenhum gasto neste mês.')
@@ -141,7 +179,7 @@ describe('CommandRouter', () => {
       throw new RepositorioIndisponivelError('timeout')
     }
     assert.equal(
-      await enviarMensagem('gasto: mercado 10'),
+      await enviarMensagem('gastei 10 no mercado'),
       presenter.servicoIndisponivel()
     )
   })
@@ -150,8 +188,7 @@ describe('CommandRouter', () => {
     gastoRepository.buscarPorPeriodo = async () => {
       throw new TypeError('bug')
     }
-    await enviarMensagem('gasto: mercado 10')
+    await enviarMensagem('gastei 10 no mercado')
     assert.equal(await enviarMensagem('!dia'), presenter.erroInesperado())
   })
 })
-
