@@ -7,6 +7,8 @@ const PERIODO_POR_COMANDO_DE_RESUMO = {
   '!mes': 'mes',
 }
 
+const COMANDOS_DE_MENU = new Set(['!ajuda', 'ajuda', '!menu', 'menu'])
+
 const REGEX_PREFIXO_DE_GASTO =
   /^(?:(?:hoje|ontem|agora)\s+)?(?:gasto\s*:\s*|despesa\s*:\s*)?(?:(?:gastei|paguei|comprei|torrei|investi|foi|foram|deu|saiu|custou)\b\s*)?/i
 
@@ -174,7 +176,7 @@ class CommandRouter {
         return await this.executarResumoDeGastos(tipoPeriodo, remetenteId)
       }
 
-      if (comandoNormalizado === '!ajuda') {
+      if (COMANDOS_DE_MENU.has(comandoNormalizado)) {
         return this.presenter.ajuda()
       }
 

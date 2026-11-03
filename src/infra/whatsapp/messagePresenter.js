@@ -2,6 +2,25 @@ function formatarEmReais(valor) {
   return `R$${valor.toFixed(2)}`
 }
 
+const SEPARADOR = '────────────────────'
+
+const ICONES_POR_CATEGORIA = {
+  moradia: '🏠',
+  alimentação: '🍽️',
+  transporte: '🚗',
+  saúde: '💊',
+  lazer: '🎉',
+  educação: '📚',
+  vestuário: '👕',
+  'cuidados pessoais': '💇',
+  pets: '🐾',
+  'contas e serviços': '📄',
+}
+
+function obterIconeDaCategoria(categoria) {
+  return ICONES_POR_CATEGORIA[categoria] || '🏷️'
+}
+
 const ROTULOS_POR_PERIODO = {
   dia: {
     titulo: 'de hoje',
@@ -19,39 +38,56 @@ const ROTULOS_POR_PERIODO = {
 
 class WhatsappMessagePresenter {
   gastoRegistrado({ categoria, valor }) {
-    return `✅ Gasto registrado: *${categoria}* - ${formatarEmReais(valor)}`
+    const icone = obterIconeDaCategoria(categoria)
+    return (
+      `✅ *Gasto registrado!*\n` +
+      `${icone} *Categoria:* ${categoria}\n` +
+      `💵 *Valor:* ${formatarEmReais(valor)}`
+    )
   }
 
   resumo(resumoDeGastos) {
     const rotuloDoPeriodo = ROTULOS_POR_PERIODO[resumoDeGastos.tipoPeriodo]
 
     if (!resumoDeGastos.usuarioCadastrado) {
-      return '📭 Nenhum gasto registrado ainda.'
+      return (
+        '📭 *Nenhum gasto registrado ainda.*\n' +
+        '💡 Envie algo como `gastei 50 no mercado` para começar!'
+      )
     }
     if (resumoDeGastos.quantidade === 0) {
-      return `📭 ${rotuloDoPeriodo.mensagemSemGastos}`
+      return `📭 *${rotuloDoPeriodo.mensagemSemGastos}*`
     }
 
     const linhasDeGastos =
       resumoDeGastos.tipoPeriodo === 'dia'
         ? resumoDeGastos.itens.map(
-            ({ categoria, valor }) => `- ${categoria}: ${formatarEmReais(valor)}`
+            ({ categoria, valor }) =>
+              `${obterIconeDaCategoria(categoria)} *${categoria}:* ${formatarEmReais(valor)}`
           )
         : Object.entries(resumoDeGastos.porCategoria).map(
-            ([categoria, valor]) => `- ${categoria}: ${formatarEmReais(valor)}`
+            ([categoria, valor]) =>
+              `${obterIconeDaCategoria(categoria)} *${categoria}:* ${formatarEmReais(valor)}`
           )
 
     return (
-      `📅 *Resumo dos gastos ${rotuloDoPeriodo.titulo}*\n\n` +
+      `📊 *Resumo dos gastos ${rotuloDoPeriodo.titulo}*\n` +
+      `${SEPARADOR}\n` +
       `${linhasDeGastos.join('\n')}\n` +
-      `\n💰 *Total:* ${formatarEmReais(resumoDeGastos.total)}`
+      `${SEPARADOR}\n` +
+      `🧾 *Lançamentos:* ${resumoDeGastos.quantidade}\n` +
+      `💰 *Total:* *${formatarEmReais(resumoDeGastos.total)}*`
     )
   }
 
   formatoInvalido() {
     return (
-      '⚠️ Formato inválido. Informe o valor e onde gastou.\n' +
-      'Ex: `gastei 200 em casa`, `paguei 50 no mercado` ou `uber 35`'
+      '⚠️ *Não consegui entender esse gasto.*\n\n' +
+      'Informe o *valor* e *onde gastou*. Exemplos:\n' +
+      '• `gastei 200 em casa`\n' +
+      '• `paguei 50 no mercado`\n' +
+      '• `uber 35`\n\n' +
+      '💡 Digite *!menu* para ver todas as opções.'
     )
   }
 
@@ -69,20 +105,26 @@ class WhatsappMessagePresenter {
 
   ajuda() {
     return (
-      `💡 *Como usar o bot:*\n\n` +
-      `🔹 *Registrar gasto:* envie mensagens naturais ou o comando tradicional.\n` +
-      ` Exemplos:\n` +
-      ` • \`gastei 200 em casa\`\n` +
-      ` • \`paguei 120,50 no mercado\`\n` +
-      ` • \`uber 35\`\n` +
-      ` • \`gasto: alimentação 50\`\n\n` +
-      `🔹 *!dia* - Mostra o resumo dos gastos do dia 📅\n` +
-      `🔹 *!semana* - Mostra o resumo dos gastos da semana 📅\n` +
-      `🔹 *!mes* - Mostra o resumo dos gastos do mês 📅\n` +
-      `🔹 *!ajuda* - Exibe esta mensagem de ajuda ⚙️\n\n` +
-      `❓ Caso tenha alguma dúvida, não hesite em perguntar!`
+      `🤖 *Menu do Assistente Financeiro*\n` +
+      `${SEPARADOR}\n\n` +
+      `✍️ *COMO REGISTRAR UM GASTO*\n` +
+      `Escreva naturalmente quanto e onde gastou:\n` +
+      `• \`gastei 200 em casa\` → 🏠 *moradia*\n` +
+      `• \`paguei 50,50 no mercado\` → 🍽️ *alimentação*\n` +
+      `• \`uber 35\` → 🚗 *transporte*\n` +
+      `• \`comprei remédio por 42,90\` → 💊 *saúde*\n\n` +
+      `📊 *RELATÓRIOS E RESUMOS*\n` +
+      `• *!dia* — Gastos detalhados de hoje\n` +
+      `• *!semana* — Resumo da semana por categoria\n` +
+      `• *!mes* — Resumo do mês por categoria\n\n` +
+      `🏷️ *CATEGORIAS AUTOMÁTICAS*\n` +
+      `🏠 Moradia • 🍽️ Alimentação • 🚗 Transporte\n` +
+      `💊 Saúde • 🎉 Lazer • 📚 Educação\n` +
+      `👕 Vestuário • 💇 Cuidados • 🐾 Pets • 📄 Contas\n\n` +
+      `⚙️ *AJUDA*\n` +
+      `• *!menu* ou *!ajuda* — Exibe este menu`
     )
   }
 }
 
-module.exports = { WhatsappMessagePresenter }
+module.exports = { WhatsappMessagePresenter, obterIconeDaCategoria }

@@ -18,12 +18,22 @@ function normalizarMensagemDoWhatsapp(mensagemRecebida) {
 }
 
 function obterCaminhoDoChrome() {
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    return process.env.PUPPETEER_EXECUTABLE_PATH
+  }
+
   const caminhosPossiveis = [
+    // Windows
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
     process.env.LOCALAPPDATA
       ? `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe`
       : null,
+    // Linux
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
   ].filter(Boolean)
 
   for (const caminho of caminhosPossiveis) {
